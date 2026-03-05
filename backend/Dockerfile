@@ -15,4 +15,5 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-CMD ["npm", "start"]
+RUN chmod +x start.sh
+CMD ["sh", "start.sh"]
