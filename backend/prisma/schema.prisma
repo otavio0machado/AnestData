@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  role      Role     @default(MEDICO)
+  cremers   String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  boletins  Boletim[]
+  auditLogs AuditLog[]
+}
+
+enum Role {
+  MEDICO
+  ADMIN
+}
+
+model Patient {
+  id               String    @id @default(cuid())
+  nome             String
+  sexo             String?
+  cor              String?
+  dataNascimento   DateTime?
+  filiacao         String?
+  prontuario       String?
+  atendimento      String?
+  medicoResponsavel String?
+  docCpf           String?
+  endereco         String?
+  createdAt        DateTime  @default(now())
+
+  boletins Boletim[]
+}
+
+model Convenio {
+  id     String @id @default(cuid())
+  nome   String
+  codigo String?
+
+  boletins Boletim[]
+}
+
+model Boletim {
+  id        String        @id @default(cuid())
+  status    BoletimStatus @default(PREENCHENDO)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relações
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  convenioId String?
+  convenio   Convenio? @relation(fields: [convenioId], references: [id])
+
+  // Dados da cirurgia
+  horaCirurgia     String?
+  dataCirurgia     DateTime?
+  procedimento     String?
+  matriculaConvenio String?
+  cirurgiao        String?
+  telefoneCirurgiao String?
+  tipoConvenioNome  String?
+
+  // Estado físico
+  asaEstado        Int?
+  tipoCirurgia     String?
+  ambulatorialInternado String?
+  semParticularidades Boolean @default(false)
+
+  // Sistemas clínicos (JSONB)
+  cardiovascular   Json?
+  respiratorio     Json?
+  neurologico      Json?
+  endocrinoReprodutor Json?
+  oncologico       Json?
+  digestivo        Json?
+  renalUrinario    Json?
+  ortopedico       Json?
+
+  // Exames laboratoriais
+  ht         String?
+  hb         String?
+  na         String?
+  k          String?
+  creatinina String?
+  ureia      String?
+  glicose    String?
+  tp         String?
+  ttp        String?
+  plaquetas  String?
+  outroExame String?
+
+  // Medicações
+  medicacoesEmUso    String?
+  preMedicacao       String?
+  npoDas             String?
+
+  // Cirurgias prévias
+  cirurgiasPrevias   String?
+
+  // Via aérea
+  viaAerea           Json?
+  mallampatti        String?
+  iotDificil         Boolean?
+  alergias           Json?
+  sangramentosHematologia Json?
+  medicamentosEspeciais Json?
+  monitorizacaoEspecial Json?
+
+  // Técnica anestésica
+  tecnicaGeral       Boolean @default(false)
+  tecnicaSedacao     Boolean @default(false)
+  tecnicaCondutiva   Boolean @default(false)
+  tecnicaLocalMonit  Boolean @default(false)
+
+  // Anestesiologista
+  anestesiologistaNome String?
+  cremers              String?
+  horaFim              String?
+  dataFim              DateTime?
+  observacoes          String?
+
+  // Técnica intraoperatória (segunda folha)
+  posicaoPaciente      String?
+  horaInicioAnestesia  String?
+  horaInicioCirurgia   String?
+  horaFimCirurgia      String?
+  sinaisVitais         Json?
+  tecnicaIntraop       Json?
+  viaAereaIntraop      Json?
+  puncoes              Json?
+  medicacoesIntraop    String?
+  monitorizacao        Json?
+  fluidos              Json?
+  diurese              String?
+  sangue               String?
+  altaAnestesica       Json?
+
+  // Administrativo
+  obsAdmin             String?
+  statusCobranca       StatusCobranca @default(PENDENTE)
+
+  assinatura   Assinatura?
+  auditLogs    AuditLog[]
+}
+
+enum BoletimStatus {
+  PREENCHENDO
+  FINALIZADO
+  ARQUIVADO
+  ENVIADO_PLANO
+}
+
+enum StatusCobranca {
+  PENDENTE
+  ENVIADO
+  PAGO
+  GLOSADO
+}
+
+model Assinatura {
+  id         String   @id @default(cuid())
+  boletimId  String   @unique
+  boletim    Boletim  @relation(fields: [boletimId], references: [id])
+  imagemBase64 String  @db.Text
+  criadoEm   DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  boletimId String?
+  boletim   Boletim? @relation(fields: [boletimId], references: [id])
+  acao      String
+  detalhes  String?
+  timestamp DateTime @default(now())
+}
