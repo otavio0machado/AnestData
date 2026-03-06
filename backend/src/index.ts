@@ -22,8 +22,10 @@ app.use('/api/reports', reportsRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
-app.listen(PORT, () => {
-  console.log(`Backend rodando em http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Backend rodando em http://localhost:${PORT}`);
+  });
+}
 
 export default app;

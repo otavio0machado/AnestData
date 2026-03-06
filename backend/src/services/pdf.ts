@@ -1,8 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export async function generateBoletimPDF(boletim: any): Promise<Buffer> {
-  // Dynamic import to avoid startup cost
-  const puppeteer = await import('puppeteer');
-  const browser = await puppeteer.default.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  const chromium = await import('@sparticuz/chromium');
+  const puppeteer = await import('puppeteer-core');
+
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH
+    || await chromium.default.executablePath();
+
+  const browser = await puppeteer.default.launch({
+    args: chromium.default.args,
+    defaultViewport: chromium.default.defaultViewport,
+    executablePath,
+    headless: true,
+  });
   const page = await browser.newPage();
 
   const html = buildHtml(boletim);
